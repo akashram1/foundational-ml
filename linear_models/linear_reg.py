@@ -1,13 +1,13 @@
 import numpy as np
 from enum import Enum
 from base import ml_model
-
+from sklearn.linear_model import LinearRegression
 
 class Optimization(Enum):
     NORMAL, GD = 1, 2
 
 
-class LinearRegression(ml_model.Model):
+class MyLinearRegression(ml_model.Model):
     def __init__(self, fit_intercept=True, seed=2023, copy=True, optimization=Optimization.NORMAL):
         super().__init__(copy, seed)
         self.fit_intercept = fit_intercept  # To be used
@@ -38,10 +38,14 @@ class LinearRegression(ml_model.Model):
 
 
 if __name__ == '__main__':
-    linreg = LinearRegression(optimization=Optimization.GD)
+    linreg = MyLinearRegression(optimization=Optimization.GD)
     X = np.array([[1, 1], [1, 2], [2, 2], [2, 3]])
     y = np.dot(X, np.array([1, 2])) + 3
     linreg.fit(X, y)
     assert linreg.weights.all() == np.array([3,1,2]).all()
-    print(linreg.predict(np.array([[2, 3], [4,5 ]])))
+
+    sklearn_linreg = LinearRegression()
+    sklearn_linreg.fit(X, y)
+
+    assert linreg.predict(np.array([[2, 3], [4,5 ]])).all() == sklearn_linreg.predict(np.array([[2, 3], [4,5 ]])).all()
 
