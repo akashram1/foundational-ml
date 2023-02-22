@@ -1,28 +1,21 @@
 import numpy as np
 from enum import Enum
+from base import ml_model
 
 
 class Optimization(Enum):
-    NORMAL, GD = 1,2
+    NORMAL, GD = 1, 2
 
 
-class LinearRegression:
+class LinearRegression(ml_model.Model):
     def __init__(self, fit_intercept=True, seed=2023, copy=True, optimization=Optimization.NORMAL):
+        super().__init__(copy, seed)
         self.fit_intercept = fit_intercept  # To be used
-        self.copy = copy
-        self.rng = np.random.default_rng(seed)
-        self.weights = None
         self.optimization = optimization
 
     def fit(self, X, y):
-        if X.shape[0] != y.shape[0]:
-            raise ValueError('Mismatch between X sample count and y label count. ')
-        if self.copy:
-            X = np.copy(X)
-        # Add the dummy x0 variable to each row to fold intercept into weights vector
-        X = np.insert(X, 0, 1, axis=1)
+        X = super()._preprocess_for_fit(X, y)
         n, m = X.shape[0], X.shape[1]
-
         if self.optimization == Optimization.NORMAL:
             # (XTX)^-1 (XTY)
             inverse = np.linalg.inv(np.dot(X.T, X))
@@ -32,7 +25,7 @@ class LinearRegression:
             # Needs to be subtracted from weights. So has to be (m,)
             self.weights = self.rng.normal(loc=0, scale=0.1, size=(m,))
 
-            # Assuming 100 epochs and learning rate = 0.01
+            # Assuming 100 epochs and learning rate = 0.01. TODO: Add convergence criteria
             learning_rate = 0.1
             for _ in range(10000):
                 y_predicted = np.dot(X, self.weights)  # (n,m) dot (m,) = (n, )
@@ -40,10 +33,7 @@ class LinearRegression:
                 self.weights = self.weights - learning_rate * gradient
 
     def predict(self, X):
-        if self.copy:
-            X = np.copy(X)
-            # Add the dummy x0 variable to each row to fold intercept into weights vector
-        X = np.insert(X, 0, 1, axis=1)
+        X = super()._preprocess_for_predict(X)
         return np.dot(X, self.weights)
 
 
