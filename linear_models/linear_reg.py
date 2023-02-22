@@ -3,6 +3,7 @@ from enum import Enum
 from base import ml_model
 from sklearn.linear_model import LinearRegression
 
+
 class Optimization(Enum):
     NORMAL, GD = 1, 2
 
