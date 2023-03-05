@@ -3,13 +3,11 @@ import numpy as np
 
 
 class Perceptron(ml_model.Model):
-    def __init__(self, copy=True, seed=2023, tol=0.0001, lr=0.01, num_iters=1000):
+    def __init__(self, copy=True, seed=2023, tol=0.0001, lr=0.01, max_iter=1000):
         super().__init__(copy=copy, seed=seed)
         self.lr = lr
-        # I prefer other convergence criteria rather than apriori fixed iter count
-        # For a perceptron, we can keep passing the dataset through the perceptron until it classifies each
-        # point correctly
-        self.num_iters = num_iters
+        # Break after max_iter if perceptron still has not converged
+        self.max_iter = max_iter
         self.mistakes_by_iter = []
 
     @staticmethod
@@ -23,7 +21,8 @@ class Perceptron(ml_model.Model):
         # TODO: What happens when we initialize weight to zero
         self.weights = self.rng.normal(loc=0, scale=0.0001, size=(m,))
         self.mistakes_by_iter = []
-        for iter in range(self.num_iters):
+        iter_count = 0
+        while True:
             # Pass over whole dataset
             mistakes_count = 0
             for i in range(n):
@@ -37,18 +36,15 @@ class Perceptron(ml_model.Model):
                     # Note in numpy a single row with m cols in a 2d (n,m) matrix is always represented as (m, )
                     # So X[0].shape = X[0].T.shape = (m, )
                     self.weights = self.weights + y[i] * X[i].T  # Same as w = w + y[i] * X[i]
-
+            iter_count += 1
             self.mistakes_by_iter.append(mistakes_count)
-            ##  Better stopping criteria
-            # if mistakes_count == 0:
-            #     break
+            if mistakes_count == 0:
+                print(f'Perceptron converged in {iter_count} iterations over the dataset.')
+                break
+            if iter_count == self.max_iter:
+                print('Perceptron did not converge. Data may not be linearly separable or more iters needed.')
 
     def predict(self, X):
         X = super()._preprocess_for_predict(X)
         linear_output = np.dot(X, self.weights)
         return Perceptron.activate(linear_output)
-
-
-if __name__ == '__main__':
-    # Check if data is linearly separable (pre-req)
-    pass
